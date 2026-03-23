@@ -109,25 +109,22 @@ if analyze_btn:
                         bvps = get_val(ratios_df, ['bvps', 'giá trị sổ sách'])
                         pe = get_val(ratios_df, ['p/e', 'price to earning']) 
                         
-                        eps_val = eps if pd.notna(eps) and float(eps) > 0 else 0
+                        eps_val_default = eps if pd.notna(eps) and float(eps) > 0 else 0
                         bvps_val = bvps if pd.notna(bvps) and float(bvps) > 0 else 0
                         pe_val = pe if pd.notna(pe) and float(pe) > 0 else 13.5  # P/E trung bình VN-Index
+                        
+                        st.markdown("### 🎛️ Nguồn Lực Định Giá (Tùy Chỉnh)")
+                        eps_val = st.number_input(
+                            f"Nhập Sức mạnh sinh lời thực tế (EPS dự phóng/trượt) để định giá:",
+                            min_value=0.0,
+                            value=float(eps_val_default),
+                            step=100.0,
+                            help=f"Gợi ý: Thu nhập trên mỗi cổ phần (EPS) báo cáo gần nhất của {ticker} là {eps_val_default:,.2f} VNĐ."
+                        )
                         
                         graham_val = graham_valuation(eps_val, bvps_val)
                         intrinsic_pe = intrinsic_valuation_pe(eps_val, pe_val)
                         
-                        st.markdown("### 🏛️ 1. Phương pháp Benjamin Graham (Giá Trị Thực)")
-                        st.markdown(f"**Cơ sở:** Tính toán định giá dựa trên mức độ bảo vệ của Tài sản (BVPS: **{bvps_val:,.2f} VNĐ**) & Sức mạnh sinh lời thực tế (EPS: **{eps_val:,.2f} VNĐ**). Đã được AI điều chỉnh hệ số an toàn từ `22.5` xuống `15.0` để bù đắp rủi ro cận biên và lãi suất của môi trường Việt Nam.")
-                        st.latex(r"V_{Graham} = \sqrt{15.0 \times EPS \times BVPS}")
-                        st.latex(rf"V_{{Graham}} = \sqrt{{15.0 \times {eps_val:,.2f} \times {bvps_val:,.2f}}} = \mathbf{{{graham_val:,.0f} \text{{ VNĐ}}}}")
-                        
-                        st.markdown("### 📈 2. Phương pháp P/E Tương Đối (Định Giá Theo Thị Trường)")
-                        st.markdown(f"**Cơ sở:** Định giá linh hoạt theo mức độ chấp nhận trả giá của thị trường. (Mức P/E tham chiếu: **{pe_val:,.2f}**).")
-                        st.latex(r"V_{P/E} = EPS \times P/E_{tham\_chiếu}")
-                        st.latex(rf"V_{{P/E}} = {eps_val:,.2f} \times {pe_val:,.2f} = \mathbf{{{intrinsic_pe:,.0f} \text{{ VNĐ}}}}")
-                        
-                        st.markdown("---")
-                        st.markdown("### ⚖️ Lựa Chọn Lời Khuyên & Biên An Toàn (Margin Of Safety)")
                         # Average with safety margin or similar logic
                         if graham_val > 0 and intrinsic_pe > 0:
                             final_val = (graham_val + intrinsic_pe) / 2
@@ -140,12 +137,12 @@ if analyze_btn:
                             method_choice = "Nhân P/E Tương đối (Do thiếu BVPS bổ trợ)"
                         
                         current_price_raw = price_df.iloc[-1]['close'] if price_df is not None and not price_df.empty else 0
-                        # Nếu current_price_raw < 1000, có khả năng đang hiển thị theo đơn vị nghìn VNĐ, cần nhân 1000
                         current_price = current_price_raw * 1000 if current_price_raw > 0 and current_price_raw < 1000 else current_price_raw
                         
                         margin_of_safety = ((final_val - current_price) / final_val * 100) if final_val > 0 else 0
                         upside = ((final_val - current_price) / current_price * 100) if current_price > 0 else 0
                         
+                        st.markdown("### ⚖️ Bảng Tổng Hợp Kết Quả & Khuyến Nghị")
                         comp_data = {
                             "Phương Pháp": ["Benjamin Graham", "P/E Tương Đối", "**Giá Hiện Tại (Thị Trường)**"],
                             "Giá Trị Định Giá": [f"{graham_val:,.0f} VNĐ", f"{intrinsic_pe:,.0f} VNĐ", f"{current_price:,.0f} VNĐ"],
@@ -163,7 +160,29 @@ if analyze_btn:
                         </div>
                         ''', unsafe_allow_html=True)
                         
-                        st.markdown("### 🔍 Phân Tích Cơ Bản (Trí Tuệ Nhân Tạo)")
+                        st.markdown("---")
+                        st.markdown("### 🧮 Chi tiết Phương pháp & Công thức")
+                        
+                        c1, c2, c3 = st.columns(3)
+                        with c1:
+                            st.markdown(f'<div class="card-box"><div class="val-title">EPS Trượt (Đã tùy chỉnh/Gợi ý)</div><div class="val-value">{eps_val:,.2f} <span style="font-size: 16px; color:#64748B">VNĐ</span></div></div>', unsafe_allow_html=True)
+                        with c2:
+                            st.markdown(f'<div class="card-box"><div class="val-title">Giá Trị Thực (Benjamin Graham)</div><div class="val-value val-highlight">{graham_val:,.0f} <span style="font-size: 16px; color:#64748B">VNĐ</span></div></div>', unsafe_allow_html=True)
+                        with c3:
+                            st.markdown(f'<div class="card-box"><div class="val-title">Định giá theo P/E</div><div class="val-value val-highlight">{intrinsic_pe:,.0f} <span style="font-size: 16px; color:#64748B">VNĐ</span></div></div>', unsafe_allow_html=True)
+                        
+                        st.markdown("#### 🏛️ 1. Phương pháp Benjamin Graham (Giá Trị Thực)")
+                        st.markdown(f"**Cơ sở:** Tính toán định giá dựa trên mức độ bảo vệ của Tài sản (BVPS: **{bvps_val:,.2f} VNĐ**) & Sức mạnh sinh lời thực tế (EPS: **{eps_val:,.2f} VNĐ**). Đã được AI điều chỉnh hệ số an toàn từ `22.5` xuống `15.0` để bù đắp rủi ro cận biên và lãi suất của môi trường Việt Nam.")
+                        st.latex(r"V_{Graham} = \sqrt{15.0 \times EPS \times BVPS}")
+                        st.latex(rf"V_{{Graham}} = \sqrt{{15.0 \times {eps_val:,.2f} \times {bvps_val:,.2f}}} = \mathbf{{{graham_val:,.0f} \text{{ VNĐ}}}}")
+                        
+                        st.markdown("#### 📈 2. Phương pháp P/E Tương Đối (Định Giá Theo Thị Trường)")
+                        st.markdown(f"**Cơ sở:** Định giá linh hoạt theo mức độ chấp nhận trả giá của thị trường. (Mức P/E tham chiếu: **{pe_val:,.2f}**).")
+                        st.latex(r"V_{P/E} = EPS \times P/E_{tham\_chiếu}")
+                        st.latex(rf"V_{{P/E}} = {eps_val:,.2f} \times {pe_val:,.2f} = \mathbf{{{intrinsic_pe:,.0f} \text{{ VNĐ}}}}")
+                        
+                        st.markdown("---")
+                        st.markdown("### 🔍 Phân Tích SWOT Trí Tuệ Nhân Tạo")
                         pros, cons = evaluate_stock(ratios_df)
                         cp1, cp2 = st.columns(2)
                         with cp1: st.success("**🚀 ĐIỂM SÁNG (Ưu Điểm):**\n\n" + (" \n\n".join(["- " + p for p in pros]) if pros else "Cần theo dõi báo cáo quý. "))
@@ -188,7 +207,10 @@ if analyze_btn:
                     with cr2:
                         st.markdown("### 🏦 Cơ cấu Cổ đông (Shareholders)")
                         if shareholders_df is not None and not shareholders_df.empty:
-                            display_sh = shareholders_df.rename(columns={'shareHolder': 'Tên Cổ Đông', 'ownPercent': 'Tỷ lệ sở hữu (%)'}).head(10)
+                            display_sh = shareholders_df.rename(columns={
+                                'share_holder': 'Tên Cổ Đông', 'shareholder': 'Tên Cổ Đông', 'shareHolder': 'Tên Cổ Đông',
+                                'share_own_percent': 'Tỷ lệ sở hữu (%)', 'own_percent': 'Tỷ lệ sở hữu (%)', 'ownPercent': 'Tỷ lệ sở hữu (%)'
+                            }).head(10)
                             
                             # Vẽ biểu đồ tròn cơ cấu cổ đông
                             try:
@@ -198,7 +220,7 @@ if analyze_btn:
                                     pie_data['Tỷ lệ sở hữu (%)'] = pd.to_numeric(pie_data['Tỷ lệ sở hữu (%)'], errors='coerce').fillna(0)
                                     total_own = pie_data['Tỷ lệ sở hữu (%)'].sum()
                                     
-                                    # Thêm dòng 'Cổ đông khác / Free-float' nếu tổng < 1.0 (hoặc nếu là % thì < 100)
+                                    # Thêm dòng 'Cổ đông khác / Free-float'
                                     threshold = 1.0 if total_own <= 1.5 else 100.0
                                     if total_own < threshold:
                                         other_row = pd.DataFrame([{'Tên Cổ Đông': 'Cổ đông khác (Free-float)', 'Tỷ lệ sở hữu (%)': threshold - total_own}])
