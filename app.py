@@ -116,27 +116,18 @@ if analyze_btn:
                         graham_val = graham_valuation(eps_val, bvps_val)
                         intrinsic_pe = intrinsic_valuation_pe(eps_val, pe_val)
                         
-                        c1, c2, c3 = st.columns(3)
-                        with c1:
-                            st.markdown(f'<div class="card-box"><div class="val-title">EPS Trượt (Thu nhập/CP)</div><div class="val-value">{eps_val:,.2f} <span style="font-size: 16px; color:#64748B">VNĐ</span></div></div>', unsafe_allow_html=True)
-                        with c2:
-                            st.markdown(f'<div class="card-box"><div class="val-title">Giá Trị Thực (Benjamin Graham)</div><div class="val-value val-highlight">{graham_val:,.2f} <span style="font-size: 16px; color:#64748B">VNĐ</span></div></div>', unsafe_allow_html=True)
-                        with c3:
-                            st.markdown(f'<div class="card-box"><div class="val-title">Chiết khấu theo P/E</div><div class="val-value val-highlight">{intrinsic_pe:,.2f} <span style="font-size: 16px; color:#64748B">VNĐ</span></div></div>', unsafe_allow_html=True)
+                        st.markdown("### 🏛️ 1. Phương pháp Benjamin Graham (Giá Trị Thực)")
+                        st.markdown(f"**Cơ sở:** Tính toán định giá dựa trên mức độ bảo vệ của Tài sản (BVPS: **{bvps_val:,.2f} VNĐ**) & Sức mạnh sinh lời thực tế (EPS: **{eps_val:,.2f} VNĐ**). Đã được AI điều chỉnh hệ số an toàn từ `22.5` xuống `15.0` để bù đắp rủi ro cận biên và lãi suất của môi trường Việt Nam.")
+                        st.latex(r"V_{Graham} = \sqrt{15.0 \times EPS \times BVPS}")
+                        st.latex(rf"V_{{Graham}} = \sqrt{{15.0 \times {eps_val:,.2f} \times {bvps_val:,.2f}}} = \mathbf{{{graham_val:,.0f} \text{{ VNĐ}}}}")
                         
-                        st.markdown("### 🧮 Chi tiết Công thức Định Giá")
-                        st.info(f'''
-                        **1. Phương pháp Benjamin Graham (Đã tinh chỉnh cho Môi trường Việt Nam):**
-                        *Công thức gốc:* $V = \sqrt{{15.0 \\times EPS \\times BVPS}}$ 
-                        *(Tại VN, do lãi suất và rủi ro cận biên cao hơn Mĩ, AI đã siết chặt mức định giá an toàn từ hệ số 22.5 xuống 15.0. Tương đương P/E tối đa = 12 và P/B tối đa = 1.25)*
-                        - **Thay số:** $V = \sqrt{{15.0 \\times {eps_val:,.2f} \\times {bvps_val:,.2f}}} \\approx \\mathbf{{{graham_val:,.0f}}}$ **VNĐ**
+                        st.markdown("### 📈 2. Phương pháp P/E Tương Đối (Định Giá Theo Thị Trường)")
+                        st.markdown(f"**Cơ sở:** Định giá linh hoạt theo mức độ chấp nhận trả giá của thị trường. (Mức P/E tham chiếu: **{pe_val:,.2f}**).")
+                        st.latex(r"V_{P/E} = EPS \times P/E_{tham\_chiếu}")
+                        st.latex(rf"V_{{P/E}} = {eps_val:,.2f} \times {pe_val:,.2f} = \mathbf{{{intrinsic_pe:,.0f} \text{{ VNĐ}}}}")
                         
-                        **2. Phương pháp P/E Tương đối (Định giá theo thị trường):**
-                        *Công thức gốc:* $V = EPS \\times P/E_{{cổ\_phiếu/ngành}}$ 
-                        - **Thay số:** $V = {eps_val:,.2f} \\times {pe_val:,.2f} \\approx \\mathbf{{{intrinsic_pe:,.0f}}}$ **VNĐ** *(Mặc định sử dụng P/E 13.5 của VN-Index nếu thiếu số liệu).*
-                        ''')
-                        
-                        st.markdown("### ⚖️ Bảng So Sánh & Lựa Chọn Giá Trị Định Giá")
+                        st.markdown("---")
+                        st.markdown("### ⚖️ Lựa Chọn Lời Khuyên & Biên An Toàn (Margin Of Safety)")
                         # Average with safety margin or similar logic
                         if graham_val > 0 and intrinsic_pe > 0:
                             final_val = (graham_val + intrinsic_pe) / 2
