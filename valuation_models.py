@@ -10,7 +10,8 @@ def graham_valuation(eps, bvps):
     try:
         if pd.isna(eps) or pd.isna(bvps): return 0
         eps, bvps = float(eps), float(bvps)
-        if eps > 0 and bvps > 0: return (22.5 * eps * bvps) ** 0.5
+        # Thay vì 22.5, VN Market dùng hệ số 15.0 (P/E=12, P/B=1.25) do biên lãi suất và rủi ro cao hơn
+        if eps > 0 and bvps > 0: return (15.0 * eps * bvps) ** 0.5
         return 0
     except: return 0
     

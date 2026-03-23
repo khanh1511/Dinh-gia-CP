@@ -111,7 +111,7 @@ if analyze_btn:
                         
                         eps_val = eps if pd.notna(eps) and float(eps) > 0 else 0
                         bvps_val = bvps if pd.notna(bvps) and float(bvps) > 0 else 0
-                        pe_val = pe if pd.notna(pe) and float(pe) > 0 else 15
+                        pe_val = pe if pd.notna(pe) and float(pe) > 0 else 13.5  # P/E trung bình VN-Index
                         
                         graham_val = graham_valuation(eps_val, bvps_val)
                         intrinsic_pe = intrinsic_valuation_pe(eps_val, pe_val)
@@ -123,6 +123,18 @@ if analyze_btn:
                             st.markdown(f'<div class="card-box"><div class="val-title">Giá Trị Thực (Benjamin Graham)</div><div class="val-value val-highlight">{graham_val:,.2f} <span style="font-size: 16px; color:#64748B">VNĐ</span></div></div>', unsafe_allow_html=True)
                         with c3:
                             st.markdown(f'<div class="card-box"><div class="val-title">Chiết khấu theo P/E</div><div class="val-value val-highlight">{intrinsic_pe:,.2f} <span style="font-size: 16px; color:#64748B">VNĐ</span></div></div>', unsafe_allow_html=True)
+                        
+                        st.markdown("### 🧮 Chi tiết Công thức Định Giá")
+                        st.info(f'''
+                        **1. Phương pháp Benjamin Graham (Đã tinh chỉnh cho Môi trường Việt Nam):**
+                        *Công thức gốc:* $V = \sqrt{{15.0 \\times EPS \\times BVPS}}$ 
+                        *(Tại VN, do lãi suất và rủi ro cận biên cao hơn Mĩ, AI đã siết chặt mức định giá an toàn từ hệ số 22.5 xuống 15.0. Tương đương P/E tối đa = 12 và P/B tối đa = 1.25)*
+                        - **Thay số:** $V = \sqrt{{15.0 \\times {eps_val:,.2f} \\times {bvps_val:,.2f}}} \\approx \\mathbf{{{graham_val:,.0f}}}$ **VNĐ**
+                        
+                        **2. Phương pháp P/E Tương đối (Định giá theo thị trường):**
+                        *Công thức gốc:* $V = EPS \\times P/E_{{cổ\_phiếu/ngành}}$ 
+                        - **Thay số:** $V = {eps_val:,.2f} \\times {pe_val:,.2f} \\approx \\mathbf{{{intrinsic_pe:,.0f}}}$ **VNĐ** *(Mặc định sử dụng P/E 13.5 của VN-Index nếu thiếu số liệu).*
+                        ''')
                         
                         st.markdown("### ⚖️ Bảng So Sánh & Lựa Chọn Giá Trị Định Giá")
                         # Average with safety margin or similar logic
