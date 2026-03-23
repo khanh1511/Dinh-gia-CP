@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 
 from data_loader import (fetch_historical_price, fetch_company_profile, 
                          fetch_financial_ratio, fetch_balance_sheet, fetch_officers, fetch_shareholders)
-from valuation_models import intrinsic_valuation_pe, graham_valuation, evaluate_stock, get_val, evaluate_macro_industry
+from valuation_models import intrinsic_valuation_pe, graham_valuation, evaluate_stock, get_val, evaluate_macro_industry, evaluate_shareholder_strength
 from bank_analysis import is_bank, analyze_bank_ratios
 
 st.set_page_config(page_title="Hệ Thống Định Giá Cổ Phiếu", layout="wide", page_icon="💹")
@@ -48,8 +48,10 @@ if analyze_btn:
             officers_df = fetch_officers(ticker)
             shareholders_df = fetch_shareholders(ticker)
             
+            
             if (profile_df is None or profile_df.empty) and (price_df is None or price_df.empty):
                 st.error(f"❌ Không tìm thấy dữ liệu cho mã cổ phiếu {ticker}. Vui lòng kiểm tra lại mã.")
+                st.warning("⚠️ **Lưu ý đối với Streamlit Cloud (Github):** Vì bạn đang triển khai trên server nước ngoài, các nhà mạng/nguồn cấp dữ liệu chứng khoán Việt Nam (VCI, SSI...) thường sẽ chặn các dải IP quốc tế để chống Scraping. Điều này khiến Streamlit Cloud không kéo được Data tự động và trả về Rỗng. Bạn nên chạy App nội bộ trên máy cá nhân, hoặc cấu hình HTTP Proxy VN trong mã nguồn.")
             else:
                 st.markdown(f'<div class="main-header">Báo Cáo Phân Tích Chi Tiết: {ticker}</div>', unsafe_allow_html=True)
                 info = profile_df.iloc[0] if profile_df is not None and not profile_df.empty else {}
@@ -198,7 +200,11 @@ if analyze_btn:
                             if 'Tỷ lệ sở hữu (%)' in display_sh.columns:
                                 display_sh['Tỷ lệ sở hữu (%)'] = display_sh['Tỷ lệ sở hữu (%)'].apply(lambda x: format_2_dec(float(x) * 100 if float(x) < 1.5 else float(x)))
                             st.dataframe(display_sh, use_container_width=True, hide_index=True)
-                            st.caption("Cơ cấu cổ đông cô đặc (Quỹ đầu tư, Nhà nước, Cổ đông sáng lập) giúp công ty ổn định kinh doanh. Tỷ lệ Free-float lớn khiến giá cổ phiếu dễ rủi ro biến động.")
+                            
+                            st.markdown("---")
+                            st.markdown("#### 🧠 AI Phân Tích Sức Mạnh Cổ Đông")
+                            strength_analysis = evaluate_shareholder_strength(shareholders_df)
+                            st.info(strength_analysis)
                         else:
                             st.warning("Dữ liệu Cổ đông chưa được cập nhật.")
                 
