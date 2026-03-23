@@ -136,22 +136,27 @@ if analyze_btn:
                             final_val = intrinsic_pe
                             method_choice = "Nhân P/E Tương đối (Do thiếu BVPS bổ trợ)"
                         
-                        current_price = price_df.iloc[-1]['close'] if price_df is not None and not price_df.empty else 0
-                        up_down = ((final_val - current_price) / current_price * 100) if current_price > 0 else 0
+                        current_price_raw = price_df.iloc[-1]['close'] if price_df is not None and not price_df.empty else 0
+                        # Nếu current_price_raw < 1000, có khả năng đang hiển thị theo đơn vị nghìn VNĐ, cần nhân 1000
+                        current_price = current_price_raw * 1000 if current_price_raw > 0 and current_price_raw < 1000 else current_price_raw
+                        
+                        margin_of_safety = ((final_val - current_price) / final_val * 100) if final_val > 0 else 0
+                        upside = ((final_val - current_price) / current_price * 100) if current_price > 0 else 0
                         
                         comp_data = {
                             "Phương Pháp": ["Benjamin Graham", "P/E Tương Đối", "**Giá Hiện Tại (Thị Trường)**"],
-                            "Giá Trị Định Giá": [f"{graham_val:,.2f} VNĐ", f"{intrinsic_pe:,.2f} VNĐ", f"{current_price:,.2f} VNĐ"],
+                            "Giá Trị Định Giá": [f"{graham_val:,.0f} VNĐ", f"{intrinsic_pe:,.0f} VNĐ", f"{current_price:,.0f} VNĐ"],
                             "Cơ sở Phân tích": ["Đại diện cho sức mạnh Tài sản (BVPS) & Lợi nhuận nội tại (EPS)", "Đại diện cho Sự chấp nhận của thị trường (Trung bình ngành)", "Giá khớp lệnh trên sàn chứng khoán hiện tại"]
                         }
                         st.table(pd.DataFrame(comp_data))
                         
                         st.markdown(f'''
                         <div style="background-color: #ECFDF5; padding: 25px; border-radius: 12px; border-left: 6px solid #10B981; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                            <h4 style="color: #047857; margin-top: 0; font-size: 22px;">🎯 KẾT LUẬN ĐỊNH GIÁ: <span style="color: #059669;">{final_val:,.2f} VNĐ</span></h4>
+                            <h4 style="color: #047857; margin-top: 0; font-size: 22px;">🎯 KẾT LUẬN ĐỊNH GIÁ: <span style="color: #059669;">{final_val:,.0f} VNĐ</span></h4>
                             <p style="font-size: 16px; color: #374151;">Dựa trên phân tích nhiều mô hình, hệ thống khuyến nghị <b>{method_choice}</b> để có cái nhìn khách quan nhất.</p>
-                            <p style="font-size: 18px; margin-top: 15px;">Biên độ An toàn so với giá thị trường: <span style="color: {'#059669' if up_down > 0 else '#DC2626'}; font-weight: bold; font-size: 24px;">{up_down:+.2f}%</span></p>
-                            <p style="font-style: italic; color: #6B7280; font-size: 14px;">(Màu Xanh: Cổ phiếu đang bị định giá thấp - Thích hợp mua vào. Màu Đỏ: Cổ phiếu định giá quá cao - Có rủi ro tạo đỉnh).</p>
+                            <p style="font-size: 18px; margin-top: 15px;">Tiềm năng tăng giá (Upside): <span style="color: {'#059669' if upside > 0 else '#DC2626'}; font-weight: bold; font-size: 24px;">{upside:+.2f}%</span></p>
+                            <p style="font-size: 18px; margin-top: 5px;">Biên An Toàn (Margin of Safety): <span style="color: {'#059669' if margin_of_safety > 0 else '#DC2626'}; font-weight: bold; font-size: 20px;">{margin_of_safety:+.2f}%</span></p>
+                            <p style="font-style: italic; color: #6B7280; font-size: 14px;">(Nguyên tắc Margin of Safety của Benjamin Graham: Cổ phiếu chỉ nên mua khi Biên an toàn > 30%. Nếu (-) cổ phiếu đang bị định giá đắt so với giá trị nội tại).</p>
                         </div>
                         ''', unsafe_allow_html=True)
                         
