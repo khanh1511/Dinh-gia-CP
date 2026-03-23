@@ -65,6 +65,19 @@ def fetch_shareholders(symbol):
     try:
         stock = get_stock(symbol)
         if stock:
-            return stock.company.shareholders()
+            df = stock.company.shareholders()
+            if df is not None and not df.empty:
+                if 'update_date' in df.columns:
+                    df = df.sort_values(by='update_date', ascending=False)
+                
+                name_col = None
+                for c in ['share_holder', 'shareHolder', 'shareholder', 'Tên Cổ Đông']:
+                    if c in df.columns:
+                        name_col = c
+                        break
+                
+                if name_col:
+                    df = df.drop_duplicates(subset=[name_col], keep='first')
+            return df
     except: pass
     return pd.DataFrame()
