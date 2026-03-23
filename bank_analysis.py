@@ -1,4 +1,5 @@
 import pandas as pd
+from valuation_models import get_val
 
 def is_bank(profile_df):
     if profile_df is None or profile_df.empty: return False
@@ -18,18 +19,10 @@ def analyze_bank_ratios(bs_df, ratios_df):
     bank_info = {}
     if ratios_df is None or ratios_df.empty: return bank_info
     
-    latest_ratio = ratios_df.iloc[0]
-    bad_debt = None
-    llr = None 
-    nim = None
-    casa = None
-    
-    for col in ratios_df.columns:
-        cl = col.lower()
-        if 'npl' in cl or 'nợ xấu' in cl or 'bad debt' in cl: bad_debt = latest_ratio.get(col)
-        elif 'llr' in cl or 'bao phủ' in cl or 'coverage' in cl: llr = latest_ratio.get(col)
-        elif 'nim' in cl or 'net interest margin' in cl or 'biên lãi thuần' in cl: nim = latest_ratio.get(col)
-        elif 'casa' in cl: casa = latest_ratio.get(col)
+    bad_debt = get_val(ratios_df, ['npl', 'nợ xấu', 'bad debt'])
+    llr = get_val(ratios_df, ['llr', 'bao phủ', 'coverage'])
+    nim = get_val(ratios_df, ['nim', 'net interest margin', 'biên lãi thuần'])
+    casa = get_val(ratios_df, ['casa'])
             
     def format_ratio(val, is_percentage=False):
         try:

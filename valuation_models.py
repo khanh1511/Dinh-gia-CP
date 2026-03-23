@@ -14,19 +14,33 @@ def graham_valuation(eps, bvps):
         return 0
     except: return 0
     
-def get_val(latest, keywords):
-    for col in latest.index:
+def get_val(df, keywords):
+    if df is None or df.empty: return 0
+    # 1. Format: Years = Rows, Metrics = Columns (vnstock 3.5.0 default)
+    latest = df.iloc[0]
+    for col in df.columns:
         for kw in keywords:
             if kw.lower() in str(col).lower():
-                return latest[col]
+                try: return float(latest[col])
+                except: pass
+                
+    # 2. Format: Metrics = Rows, Years = Columns (older vnstock or generic yfinance)
+    for col in df.columns:
+        if df[col].dtype == object or str(df[col].dtype) == 'string':
+            for idx, val in df[col].items():
+                for kw in keywords:
+                    if kw.lower() in str(val).lower():
+                        for c in df.columns:
+                            try: return float(df.loc[idx, c])
+                            except: pass
     return 0
     
 def evaluate_stock(ratios_df):
     pros, cons = [], []
     if ratios_df.empty: return pros, cons
-    latest = ratios_df.iloc[0]
-    roe = get_val(latest, ['roe'])
-    debt = get_val(latest, ['debt/equity', 'debt on equity', 'tỷ lệ nợ'])
+    
+    roe = get_val(ratios_df, ['roe'])
+    debt = get_val(ratios_df, ['debt/equity', 'debt on equity', 'tỷ lệ nợ'])
     
     if pd.notna(roe) and float(roe) > 0.15:
         val = float(roe)

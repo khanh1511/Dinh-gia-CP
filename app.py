@@ -89,8 +89,15 @@ if analyze_btn:
                 with ui_tabs[1]:
                     if ratios_df is not None and not ratios_df.empty:
                         st.markdown("**Bảng Chỉ số (Làm tròn 2 chữ số thập phân)**")
-                        # Format all data to 2 decimal places properly
-                        styled_ratios = ratios_df.head(5).T.map(lambda x: format_2_dec(x) if pd.notna(x) else "N/A")
+                        # Format all data to 2 decimal places properly regardless of DF shape
+                        try:
+                            if 'item' in ratios_df.columns or 'item_id' in ratios_df.columns or any(c for c in ratios_df.columns if str(ratios_df[c].dtype)=='object'):
+                                styled_ratios = ratios_df.head(15).map(lambda x: format_2_dec(x) if pd.notna(x) and not isinstance(x, str) else x)
+                            else:
+                                styled_ratios = ratios_df.head(5).T.map(lambda x: format_2_dec(x) if pd.notna(x) else "N/A")
+                        except:
+                            styled_ratios = ratios_df.head(5).T
+                            
                         st.dataframe(styled_ratios, use_container_width=True, height=500)
                     else:
                         st.warning("Không có dữ liệu chi tiết báo cáo tài chính.")
@@ -98,10 +105,9 @@ if analyze_btn:
                 # Tab 3: Định Giá
                 with ui_tabs[2]:
                     if ratios_df is not None and not ratios_df.empty:
-                        latest_ratio = ratios_df.iloc[0]
-                        eps = get_val(latest_ratio, ['eps'])
-                        bvps = get_val(latest_ratio, ['bvps'])
-                        pe = get_val(latest_ratio, ['p/e', 'price to earning']) 
+                        eps = get_val(ratios_df, ['eps', 'thu nhập trên mỗi cổ phần'])
+                        bvps = get_val(ratios_df, ['bvps', 'giá trị sổ sách'])
+                        pe = get_val(ratios_df, ['p/e', 'price to earning']) 
                         
                         eps_val = eps if pd.notna(eps) and float(eps) > 0 else 0
                         bvps_val = bvps if pd.notna(bvps) and float(bvps) > 0 else 0
